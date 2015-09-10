@@ -1,0 +1,16 @@
+unsigned char check_connection(void);
+unsigned char check_M95(void);
+void M95_ONOFF (void);
+void sendSMS(char * smstext);
+void majakas (void);
+short GPRS_init(void);
+void pharse_GPRS_string(char *type);
+void GPRS_connect(void);
+void get_obj_ID(void);
+void get_cells(void);
+void battery(char* ats);
+void duomenu_siuntimas_GPRS(char param, char code);
+void M95_on(void);
+void Set_RTC();
+void get_phones(void);
+void SMS (char *type);
