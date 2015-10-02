@@ -82,13 +82,13 @@ void write_2_flash_string(unsigned char *data, unsigned long address, unsigned c
     __enable_interrupt(); 
 }
 
-void read_from_flash_strings(unsigned char i, unsigned char kiek) {
-
-    char *adress;
-    adress = (char *) (ADDRESS+i*512);
-    memcpy(flash_data, adress, kiek);
-
-}
+//void read_from_flash_strings(unsigned char i, unsigned char kiek) {
+//
+//    char *adress;
+//    adress = (char *) (ADDRESS+i*512);
+//    memcpy(flash_data, adress, kiek);
+//
+//}
 
 
 //float read_from_flash_float(unsigned short address) {

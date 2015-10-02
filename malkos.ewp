@@ -97,7 +97,7 @@
         </option>
         <option>
           <name>OGChipSelectMenu</name>
-          <state>MSP430F5308	MSP430F5308</state>
+          <state>MSP430F5310	MSP430F5310</state>
         </option>
         <option>
           <name>GStackHeapOverride</name>
@@ -743,7 +743,7 @@
         <option>
           <name>OutputFormat</name>
           <version>11</version>
-          <state>33</state>
+          <state>22</state>
         </option>
         <option>
           <name>FormatVariant</name>
@@ -804,7 +804,7 @@
         </option>
         <option>
           <name>XclFile</name>
-          <state>$TOOLKIT_DIR$\config\linker\lnk430f5308.xcl</state>
+          <state>$TOOLKIT_DIR$\config\linker\lnk430f5310.xcl</state>
         </option>
         <option>
           <name>XclFileSlave</name>

@@ -1,4 +1,4 @@
-"D:\MALKOS\IAR proj\UART_functions.c"
+"D:\MALKOS\MALKOS\UART_functions.c"
 -std=c99
 -ferror-limit=100
 -I
@@ -7,7 +7,7 @@ C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\inc\dlib
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\inc
 -I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\inc\dlib\c
--D__MSP430F5308__=1
+-D__MSP430F5310__=1
 -D__CHAR_BITS__=8
 -D__CHAR_MAX__=0xff
 -D__CHAR_MIN__=0

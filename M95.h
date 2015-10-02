@@ -1,6 +1,5 @@
 unsigned char check_connection(void);
-unsigned char check_M95(void);
-void M95_ONOFF (void);
+//unsigned char check_M95(void);
 void sendSMS(char * smstext);
 void majakas (void);
 short GPRS_init(void);
@@ -14,3 +13,9 @@ void M95_on(void);
 void Set_RTC();
 void get_phones(void);
 void SMS (char *type);
+void SMS_check(void);
+void get_level(void);
+void set_flags(char flag,char position);
+unsigned char check_GPRS_connection(void);
+char wait_answer(char *type1, char *type2, int delay, char count);
+void M95_off(void);

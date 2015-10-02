@@ -8,7 +8,7 @@
 
 "-p" 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\config\debugger\msp430f5308.ddf" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\config\debugger\msp430f5310.ddf" 
 
 "--core=430Xv2" 
 
@@ -30,7 +30,7 @@
 
 "--derivative" 
 
-"MSP430F5308" 
+"MSP430F5310" 
 
 "--protocol" 
 
