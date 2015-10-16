@@ -45,7 +45,7 @@ void Send_string(char* sdata, unsigned long del) {
    Clear_flags();
    delay_cnt=0;
    while(delay_cnt<del)
-     WDTCTL = WDTPW+WDTCNTCL;  
+     WDTCTL = WDTCNTCL+WDT_ARST_1000;
 }
 
 void USARTSendChar(char character)

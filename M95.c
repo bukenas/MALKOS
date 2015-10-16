@@ -36,6 +36,11 @@ struct M95_info {
   char cell_id[8];
   char level[10];
 }M95_i[10];
+
+union {
+    unsigned long K;
+    unsigned char k[4];
+}un;
 //=============================================================================
 //unsigned char check_M95(void) {
 //  Clear_flags();
@@ -154,7 +159,11 @@ void battery(char* ats){
   ptr = strstr((const char*)USARTReceiveBuffer,"CBC:");
   if(ptr) {
     ptr1 = ptr - (const char*)USARTReceiveBuffer;
-    memcpy(ats,USARTReceiveBuffer+ptr1+10,4);
+    ptr = strstr((const char*)USARTReceiveBuffer+ptr1+7,",");
+    if(ptr) {
+      ptr1 = ptr - (const char*)USARTReceiveBuffer;  
+    }
+    memcpy(ats,USARTReceiveBuffer+ptr1+1,4);
     ats[4]=0;
   }
 }
@@ -199,11 +208,13 @@ void pharse_GPRS_string(char *type) {
 //      strcat((char*)GPRS_message,",");
 //      strcat((char*)GPRS_message,COORDINATES1);
       strcat((char*)GPRS_message,"&x=");
-      sprintf(str, "%d", x);
+      //sprintf(str, "%d", x);
+      sprintf(str,"%1.2f",avgangle*100);
       strcat((char*)GPRS_message,str);
       //strcat((char*)GPRS_message,COORDINATES2);
       strcat((char*)GPRS_message,"&y=");
-      sprintf(str, "%d", y);
+     //sprintf(str, "%d", y);
+      sprintf(str,"%1.2f",var*100);
       strcat((char*)GPRS_message,str);
       //strcat((char*)GPRS_message,COORDINATES1);
       strcat((char*)GPRS_message,"&z=");
@@ -253,15 +264,18 @@ void get_level(void){
 }
 //===============================================================================
 void duomenu_siuntimas_GPRS(char param, char code){
-  //char str[10];
+  
+    Send_string("AT+QIREGAPP\r",20);
+    wait_answer("OK", "ERROR",20,2);
+    Send_string("AT+QIACT\r",20);
+    wait_answer("OK", "ERROR",20,2);
+  
+  
+  
   Send_string("at+qcellloc=1\r",5); // koordinaciu uzklausa
   
-  while(!wait_answer("QCELLLOC:", "ERROR", 400, 2));
-//  delay_cnt=0;
-//  while(!strstr((const char*)USARTReceiveBuffer,"QCELLLOC:") && delay_cnt<400)
-//      __delay_cycles(5000);
-  
-  
+  wait_answer("QCELLLOC:", "ERROR", 400, 2);
+
 //Send_string("at+qgsmloc=7\r",500);
   __delay_cycles(500); //kad spetu atsiusti koordinates
   ptr = strstr((char const*)USARTReceiveBuffer,"QCELLLOC:");
@@ -279,13 +293,15 @@ void duomenu_siuntimas_GPRS(char param, char code){
     if(code==0)    
         pharse_GPRS_string("regular");
     if(code==1)    
-        pharse_GPRS_string("nurimo");
+        pharse_GPRS_string("calm_down");
     if(code==2)    
         pharse_GPRS_string("alarm");
     if(code==3)    
         pharse_GPRS_string("deactivated");
     if(code==5)    
         pharse_GPRS_string("activated");
+    if(code==7)    
+        pharse_GPRS_string("started");
 
     Clear_flags();
     Send_string("at+qisend\r",5);  
@@ -336,7 +352,13 @@ void duomenu_siuntimas_GPRS(char param, char code){
     ptr = strstr((char const*)USARTReceiveBuffer,"&#192");
     if(ptr) {
       ptr1 = ptr - (const char*)USARTReceiveBuffer;
-       
+      
+      memcpy(un.k,(unsigned long*)0xf000+4,4);
+      good_connections=un.K;
+      good_connections++;
+      set_debug_flags(good_connections,4);
+    
+    
     ptr = strstr((char const*)USARTReceiveBuffer,"&#193");
     if(ptr) {
       ptr2 = ptr - (const char*)USARTReceiveBuffer;
@@ -481,18 +503,27 @@ void Set_RTC(){ //nenaudojama
   RTCCTL01 &= ~(RTCHOLD);                   // Start RTC calendar mode
 }
 //===============================================================================
-void M95_on(void){
+char M95_on(void){
+  char str[20];
   //Send_string("ON/OFF\n",2);
-    if((P1IN&0x80)==0){
+  if((P1IN&0x80)==0){
       P2OUT |= BIT0;
       //Send_string("ON/OFF HIGH\n",2);
       //delay_cnt=0;
       kiek=0;
       while(!(P1IN&0x80) && kiek++<30){
-        WDTCTL = WDTPW+WDTCNTCL;
+        WDTCTL = WDTCNTCL+WDT_ARST_1000;
       __delay_cycles(50000);
       }
-      __delay_cycles(50000);
+      if(kiek==30)
+        Send_string("NEIJUNGIAU!!!!!!!!!!!\n",2);
+      else{
+        Send_string("ON ",2);
+        sprintf(str,"%d\n",kiek);
+        Send_string(str,0);
+      }
+      
+      __delay_cycles(5000000);
       P2OUT &= ~BIT0;
       //Send_string("ON/OFF  LOW\n",2);
   }
@@ -500,30 +531,41 @@ void M95_on(void){
   while((!check_connection()) && kiek++<8){
             delay_cnt=0;
             while(delay_cnt<80)
-              WDTCTL = WDTPW+WDTCNTCL; 
+              WDTCTL = WDTCNTCL+WDT_ARST_1000; 
           }  
           if(kiek==9){
            //Send_string("NEPRISIJUNGIU PRIE TINKLO\n",0); 
-             M95_off();
-             //__delay_cycles(2000000);
-             set_flags(state,8);
-             set_flags(1,9);
-             WDTCTL = 0;//SW reset
+//             M95_off();
+            memcpy(un.k,(unsigned long*)0xf000+1,4);
+            noconnection_count=un.K;
+            noconnection_count++;
+            set_debug_flags(noconnection_count,1);
+            return 0;
+//             
+//             set_flags(state,8);
+//             set_flags(1,9);
+//             WDTCTL = 0;//SW reset
           }
    kiek=0;
-    while((!check_GPRS_connection()) && kiek++<9){
+   while((!check_GPRS_connection()) && kiek++<9){
             delay_cnt=0;
             while(delay_cnt<80)
-              WDTCTL = WDTPW+WDTCNTCL; 
+              WDTCTL = WDTCNTCL+WDT_ARST_1000;
           }  
           if(kiek==10){
-           //Send_string("NEPRISIJUNGIU PRIE TINKLO\n",0); 
-           M95_off();
-           //__delay_cycles(2000000);
-           set_flags(state,8);
-           set_flags(1,9);
-           WDTCTL = 0;//SW reset
+             //Send_string("NEPRISIJUNGIU PRIE TINKLO\n",0); 
+             //M95_off();
+            memcpy(un.k,(unsigned long*)0xf000+2,4);
+            noGPRSconnection_count=un.K;
+            noGPRSconnection_count++;
+            set_debug_flags(noGPRSconnection_count,2);
+            return 0;
+//             set_flags(state,8);
+//             set_flags(1,9);
+//             WDTCTL = 0;//SW reset
           }
+          else
+            return 1;
 }
 //===============================================================================
 unsigned char check_connection(void) {
@@ -553,22 +595,43 @@ void set_flags(char flag,char position){
   
 }
 //===============================================================================
+void set_debug_flags(unsigned long flag,char position){
+  unsigned char *pho = (unsigned char*)0xf000;
+  unsigned long dat[100];
+//  union {
+//    unsigned long K;
+//    unsigned char k[4];
+//  }UN;
+  un.K=flag;
+  //memcpy(UN.K,flag,4);
+  memcpy(dat,pho,100);
+  
+  memcpy(dat+position,un.k,4);
+  //dat[position]=flag;
+  write_2_flash_string ((unsigned char*)dat,0xf000,100);
+}
+
+//===============================================================================
 char wait_answer(char *type1, char *type2, int delay, char count){
   delay_cnt=0;
   if(count==1) {
-    while(!strstr((const char*)USARTReceiveBuffer,type1) && delay_cnt<delay)
-        __delay_cycles(5000);
+    while(!strstr((const char*)USARTReceiveBuffer,type1) && delay_cnt<delay){
+      WDTCTL = WDTCNTCL+WDT_ARST_1000; 
+      __delay_cycles(5000);
+    }
   }
   else {
-    while(!strstr((const char*)USARTReceiveBuffer,type1) && !strstr((const char*)USARTReceiveBuffer,type2) && delay_cnt<delay)
-        __delay_cycles(5000);
+    while(!strstr((const char*)USARTReceiveBuffer,type1) && !strstr((const char*)USARTReceiveBuffer,type2) && delay_cnt<delay){
+       WDTCTL = WDTCNTCL+WDT_ARST_1000;
+       __delay_cycles(5000);
+    }
   }
-  
   if(delay_cnt==delay)
     return 0;
   else
     return 1;
 }
+
 //===============================================================================
 void SMS_check(){
   char str[5];
@@ -593,7 +656,7 @@ void SMS_check(){
 //    while(!strstr((const char*)USARTReceiveBuffer,"+CMGR:") && (!strstr((const char*)USARTReceiveBuffer,"OK")) && delay_cnt<30){
 //      __delay_cycles(5000);
 //    }
-    wait_answer("+CMGR:", "OK", 30, 2);
+    wait_answer("+CMGR:", "OK", 10, 2);
     
     ptr = strstr((char const*)USARTReceiveBuffer,"+CMGR:"); //tikriname ar yra zinute
     if(ptr){
@@ -672,13 +735,12 @@ void get_cells(void){
     M95_i[0].level[0]=0;
   }
   
-  while(M95_i[0].cell_id[0]==0x78 || M95_i[0].cell_id[0]==0x00){ //jei gauna x kartoti
+  kiek=0;
+  while((M95_i[0].cell_id[0]==0x78 || M95_i[0].cell_id[0]==0x00) && (kiek++<5)){ //jei gauna x kartoti 5 kartus
       Send_string("at+qeng=1,3\r",10); 
       
       Send_string("AT+qeng?\r",50); 
-      delay_cnt=0;
-      while(!strstr((const char*)USARTReceiveBuffer,"OK") && delay_cnt<100)
-        __delay_cycles(5000);
+      wait_answer("OK"," ",100,1);
       cell_nr=0;
       
       
@@ -779,10 +841,11 @@ void get_cells(void){
 }
 
 void M95_off(void){
-  Send_string("at+qpowd=1\r",0);
+  //Send_string("at+qpowd=1\r",0);
   kiek=0;
   while((P1IN&0x80)!=0 && kiek++<10){
-    __delay_cycles(2000000);
     Send_string("at+qpowd=1\r",0);
+     WDTCTL = WDTCNTCL+WDT_ARST_1000;
+    __delay_cycles(2000000);
   }
 }
